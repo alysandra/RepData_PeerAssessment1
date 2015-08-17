@@ -1,5 +1,5 @@
   
-```{recho=TRUE}
+```{r}
 title: "PA1_template.Rmd"
 output: html_document
 echo = TRUE
@@ -46,7 +46,7 @@ names(max_interval)
 ```
 ##Part 4: Imputing missing values
 
-## Find the number of missing values:
+###Find the number of missing values:
 ```{r}
 activity_NA <- sum(is.na(activity))
 activity_NA
@@ -79,7 +79,7 @@ median(StepsTotal2$steps)
 ```
 
 ## Part 5: Are there differences in activity patterns between weekdays and weekends?
-##Weekday versus weekend walking: differentiate between the two first:
+###Weekday versus weekend walking: differentiate between the two first:
 ```{r}
 day <- weekdays(activity$date)
 daylevel <- vector()
