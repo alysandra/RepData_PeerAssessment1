@@ -32,7 +32,7 @@ median(StepsTotal$steps)
 
 ##Part 3: What is the average daily activity pattern?
 
-##Use time series plot to check 5 minute intervals
+#Use time series plot to check 5 minute intervals
 ```{r}
 time_series <- tapply(activity$steps, activity$interval, mean, na.rm = TRUE)
 
