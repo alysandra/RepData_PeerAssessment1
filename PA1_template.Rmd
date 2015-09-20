@@ -1,5 +1,5 @@
 ---
-title: Reproducible Research Peer Assignement 1
+title: "Reproducible Research Peer Assignement 1"
 output: html_document
 ---
 
