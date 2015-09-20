@@ -1,38 +1,56 @@
-  
-```{r}
-title: "PA1_template.Rmd"
+---
+title: "Reproducible Research Peer Assignement 1"
 output: html_document
-echo = TRUE
-options(scipen = 1)
-```
+---
+
+This is an assignment on answering a series of questions to practice loading data, cleaning it and interpreting data in a way that is clearly marked and presented on a html format. The data is collected from a [Fitbit](http://en.wikipedia.org/wiki/Fitbit).
+## Data
+The data for this assignment was downloaded from the course web
+site:
+
+Dataset: [Activity monitoring data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip) [52K]
+
+The variables included in this dataset are:
+
+1. steps: Number of steps taking in a 5-minute interval (missing
+    values are coded as `NA`)
+
+2. date: The date on which the measurement was taken in YYYY-MM-DD format
+
+3. interval: Identifier for the 5-minute interval in which measurement was taken
+
+The dataset is stored in a comma-separated-value (CSV) file and there are a total of 17,568 observations in this dataset.
+
+
 ## Part 1: Loading and preprocessing the data
+
 ```{r}
 data <- read.csv("~/mm/activity.csv",  colClasses = c("numeric", "character", 
                                                           "numeric"))
-data$month <- as.numeric(format(data$date, "%m"))
-noNA <- na.omit(data)
-rownames(noNA) <- 1:nrow(noNA)
-head(noNA)
-dim(noNA)
-library(ggplot2)
-activity$date <- as.Date(activity$date, "%Y-%m-%d")
+cache=TRUE
 ```
 
 ## Part 2: What is mean total number of steps taken per day?
+- Calculate the aggregate steps for all intervals sorted by day
+- Plot Total Steps by Day
+- Look for the interval with most steps.
+
 ```{r}
-StepsTotal <- aggregate(steps ~ date, data = activity, sum, na.rm = TRUE)
+StepsTotal <- aggregate(steps ~ interval, data, mean)
+dailysteps <- aggregate(steps~date,data,sum)
 
-hist(StepsTotal$steps, main = "Total Steps By Day", xlab = "Days", col = "yellow")
+hist(dailysteps$steps, main = "Total Steps By Day", xlab = "Number of Steps", col = "yellow")
 
-mean(StepsTotal$steps)
-##Mean: [1] 10766.19
-median(StepsTotal$steps)
-##Median: [1] 10765
+max_interval <- StepsTotal[which.max(StepsTotal$steps),1]
+mean(dailysteps$steps)
+median(dailysteps$steps)
 ```
 
 ##Part 3: What is the average daily activity pattern?
 
 ###Use time series plot to check 5 minute intervals
+The 5-minute interval, on average across all the days in the data set, containing the maximum number of steps is `r max_interval`.
+
 ```{r}
 time_series <- tapply(activity$steps, activity$interval, mean, na.rm = TRUE)
 
@@ -44,63 +62,75 @@ plot(row.names(time_series), time_series, type = "l", xlab = "5-min interval",
 max_interval <- which.max(time_series)
 names(max_interval)
 ```
+
+Therefore, the max number of steps taken on a 5 minute average in a day is 835.
+
 ##Part 4: Imputing missing values
 
 ###Find the number of missing values:
-```{r}
-activity_NA <- sum(is.na(activity))
-activity_NA
 
-##Replace the NA value with avg 5 min intervals
-StepsAverage <- aggregate(steps ~ interval, data = activity, FUN = mean)
-fillNA <- numeric()
-for (i in 1:nrow(activity)) {
-  obs <- activity[i, ]
-  if (is.na(obs$steps)) {
-    steps <- subset(StepsAverage, interval == obs$interval)$steps
-  } else {
-    steps <- obs$steps
-  }
-  fillNA <- c(fillNA, steps)
-}
-##Create a new datasset, then aggregate the steps and make a new histogram.
-new_activity <- activity
-new_activity$steps <- fillNA
+```{r}
+empty <-sum(!complete.cases(data))
+newdata <- transform(data, steps = ifelse(is.na(data$steps), StepsTotal$steps[match(data$interval, StepsTotal$interval)], data$steps))
+newdata[as.character(newdata$date) == "2012-10-01", 1] <- 0
+```
+We altered the original data by replacing NA values as 0.
+
+So now with the filled in data, we can recount the information given.
+
+## To make it more comparable, here is a display of the changes that occurred due to the removal of "NA" figures, as shown in the blue parts in the histogram.
+```{r}
+
+dailysteps.2 <- aggregate(steps~date,newdata,sum)
+hist(dailysteps.2$steps, main = "Total Steps by Day", xlab = "Number of Steps", col="blue")
 
 StepsTotal2 <- aggregate(steps ~ date, data = new_activity, sum, na.rm = TRUE)
 hist(StepsTotal2$steps, main = "Total steps by day", xlab = "day", col = "blue")
 
+
+hist(dailysteps$steps, main = paste("Total Steps Each Day"), col="yellow", xlab="Number of Steps", add=T)
+legend("topright", c("Original","Edited"), col=c("yellow", "blue"), lwd=10)
+
 ##New Mean and median
 
-mean(StepsTotal2$steps)
-##[1] 10766.19
-median(StepsTotal2$steps)
-##[1] 10766.19
+mean(dailysteps.2$steps)
+
+median(dailysteps.2$steps)
+
 ```
 
-## Part 5: Are there differences in activity patterns between weekdays and weekends?
-###Weekday versus weekend walking: differentiate between the two first:
-```{r}
-day <- weekdays(activity$date)
-daylevel <- vector()
-for (i in 1:nrow(activity)) {
-  if (day[i] == "Saturday") {
-    daylevel[i] <- "Weekend"
-  } else if (day[i] == "Sunday") {
-    daylevel[i] <- "Weekend"
-  } else {
-    daylevel[i] <- "Weekday"
-  }
-}
-##Compare the two types
-activity$daylevel <- daylevel
-activity$daylevel <- factor(activity$daylevel)
+To show the change in mean and median
 
-stepsByDay <- aggregate(steps ~ interval + daylevel, data = activity, mean)
-names(stepsByDay) <- c("interval", "daylevel", "steps")
+```{r}
+change1<- mean(dailysteps.2$steps) - mean(dailysteps$steps)
+print(change1)
+change2<- median(dailysteps.2$steps) - median(dailysteps$steps)
+print(change2)
+
+change3 <- sum(dailysteps.2$steps) - sum(dailysteps$steps)
+print(change3)
+```
+
+##Changes after edit
+- Mean changed by -176, 
+- Median increased by 1.18. 
+- There has also been 75363 steps added when the data is changed.
+
+
+## Part 5: Are there differences in activity patterns between weekdays and weekends?
+###Weekday versus weekend walking: differentiate between the two first, by sorting the data and adding a new column of either Weekday or Weekend
+```{r}
+weekdays <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+newdata$dow = as.factor(ifelse(is.element(weekdays(as.Date(newdata$date)),weekdays), "Weekday", "Weekend"))
+
+stepsint<- aggregate(steps ~ interval + dow, newdata, mean)
+
 ```
 ##Create the plot:
 ```{r}
-xyplot(steps ~ interval | daylevel, stepsByDay, type = "l", layout = c(1, 2), 
-       xlab = "Interval", ylab = "Number of steps")
+library(lattice)
+
+xyplot(stepsint$steps ~ stepsint$interval|stepsint$dow, layout= c(1,2), xlab="Interval", ylab="Steps", main="Average Steps per day by interval", type = "l", col="pink")
+
 ```
+

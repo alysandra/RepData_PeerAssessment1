@@ -27,7 +27,7 @@ The dataset is stored in a comma-separated-value (CSV) file and there are a tota
 ```{r}
 data <- read.csv("~/mm/activity.csv",  colClasses = c("numeric", "character", 
                                                           "numeric"))
-
+cache=TRUE
 ```
 
 ## Part 2: What is mean total number of steps taken per day?
@@ -112,9 +112,9 @@ print(change3)
 ```
 
 ##Changes after edit
-` Mean changed by -176, 
-` Median increased by 1.18. 
-` There has also been 75363 steps added when the data is changed.
+- Mean changed by -176, 
+- Median increased by 1.18. 
+- There has also been 75363 steps added when the data is changed.
 
 
 ## Part 5: Are there differences in activity patterns between weekdays and weekends?
